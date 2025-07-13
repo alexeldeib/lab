@@ -1,0 +1,31 @@
+ports:
+  traefik:
+    port: 9000
+    exposedPort: 9000
+providers:
+  kubernetesGateway:
+    enabled: true
+service:
+  enabled: true
+  annotations:
+    service.beta.kubernetes.io/coreweave-load-balancer-ip-families: ipv4
+    service.beta.kubernetes.io/coreweave-load-balancer-type: public
+gateway:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+  listeners:
+    web:
+      port: 8000
+      hostname: "*.acebutt.xyz"
+      protocol: HTTP
+      namespacePolicy: All
+    websecure:
+      hostname: "*.acebutt.xyz"
+      port: 8443
+      protocol: HTTPS
+      namespacePolicy: All
+      certificateRefs:
+        - group: ''
+          kind: Secret
+          name: acebutt-cert

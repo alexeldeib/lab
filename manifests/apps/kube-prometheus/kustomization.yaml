@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+
+helmCharts:
+  - name: kube-prometheus-stack
+    repo: https://prometheus-community.github.io/helm-charts
+    version: 75.10.0
+    releaseName: prometheus
+    namespace: llm-d-monitoring
+    valuesInline:
+      nodeExporter:
+        enabled: false
+      grafana:
+        adminPassword: admin
+        service:
+          type: ClusterIP
+      prometheus-node-exporter:
+        service:
+          port: 9101
+      prometheus:
+        service:
+          type: ClusterIP
+        prometheusSpec:
+          serviceMonitorSelectorNilUsesHelmValues: false
+          serviceMonitorSelector: {}
+          serviceMonitorNamespaceSelector: {}
+          maximumStartupDurationSeconds: 300

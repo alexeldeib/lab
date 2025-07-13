@@ -1,0 +1,5 @@
+**/charts/*.tgz
+
+# helm inflations
+manifests/apps/**/charts
+manifests/apps/secrets/manifest.yaml

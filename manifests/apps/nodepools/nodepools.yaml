@@ -1,0 +1,164 @@
+apiVersion: compute.coreweave.com/v1alpha1
+kind: NodePool
+metadata:
+  name: ace-cd-gp-a192-genoa
+spec:
+  instanceType: cd-gp-a192-genoa
+  autoscaling: false
+  targetNodes: 10
+  minNodes: 0
+  maxNodes: 0
+---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-cd-hp-a96-genoa
+# spec:
+#   instanceType: cd-hp-a96-genoa
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-cd-gp-i96-icelake
+# spec:
+#   instanceType: cd-gp-i96-icelake
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-cd-hc-a384-genoa
+# spec:
+#   instanceType: cd-hc-a384-genoa
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-turin-gp
+# spec:
+#   instanceType: turin-gp
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-turin-gp-l
+# spec:
+#   instanceType: turin-gp-l
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-cd-gp-i64-erapids
+# spec:
+#   instanceType: cd-gp-i64-erapids
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+---
+apiVersion: compute.coreweave.com/v1alpha1
+kind: NodePool
+metadata:
+  name: ace-gd-8xh200ib-i128
+spec:
+  instanceType: gd-8xh200ib-i128
+  autoscaling: false
+  targetNodes: 12
+  minNodes: 0
+  maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-gd-8xh200-i128
+# spec:
+#   instanceType: gd-8xh200-i128
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-gd-8xh100ib-i128
+# spec:
+#   instanceType: gd-8xh100ib-i128
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-gd-8xh100-i128
+# spec:
+#   instanceType: gd-8xh100-i128
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-gd-8xa100-i128
+# spec:
+#   instanceType: gd-8xa100-i128
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-gd-8xl40-i128
+# spec:
+#   instanceType: gd-8xl40-i128
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-gd-8xl40s-i128
+# spec:
+#   instanceType: gd-8xl40s-i128
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
+# ---
+# apiVersion: compute.coreweave.com/v1alpha1
+# kind: NodePool
+# metadata:
+#   name: ace-gd-1xgh200
+# spec:
+#   instanceType: gd-1xgh200
+#   autoscaling: false
+#   targetNodes: 0
+#   minNodes: 0
+#   maxNodes: 0
