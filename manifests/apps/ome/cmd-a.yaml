@@ -1,0 +1,140 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ome-cmd-a
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: model-storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 5Ti
+  csi:
+    driver: csi.vastdata.com
+    volumeAttributes:
+      mount_options: vers=3,nconnect=16,lookupcache=pos,noacl,noatime
+      protocol: NFS
+      quota_id: "1498"
+      root_export: /k8s
+      storage.kubernetes.io/csiProvisionerIdentity: 1752419779638-8081-csi.vastdata.com
+      tenant_id: "245"
+      view_id: "1753"
+      view_policy: nosquash-eb4403-ace-future-is-now-mSyv7E
+      vip_pool_fqdn: U36A.all-tenants.storage-backend01.us-west-04a.int.coreweave.cloud
+      volume_name: ngcp-eb4403-ace-future-is-now-mSyv7E:llm-d:pvc-7238e8dd-65cf-40c1-b953-21123c7567b6
+    volumeHandle: pvc-7238e8dd-65cf-40c1-b953-21123c7567b6
+  mountOptions:
+    - vers=3
+    - nconnect=16
+    - lookupcache=pos
+    - noacl
+    - noatime
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: shared-vast
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-storage
+  namespace: ome-cmd-a
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Ti
+  storageClassName: shared-vast
+  volumeName: model-storage
+---
+apiVersion: ome.io/v1beta1
+kind: ClusterBaseModel
+metadata:
+  name: cmd-a
+spec:
+  vendor: meta
+  disabled: false
+  version: "1.0.0"
+  displayName: cohere.c4ai-command-a-03-2025
+  storage:
+    storageUri: hf://CohereLabs/c4ai-command-a-03-2025
+    # storageUri: pvc://llama-70b-demo:model-storage/CohereLabs/c4ai-command-a-03-2025
+    nodeSelector:
+      gpu.nvidia.com/model: H200
+    path: /mnt/local/models/CohereLabs/c4ai-command-a-03-2025
+    key: hf-token
+  modelFramework:
+    name: transformers
+    version: "4.47.0.dev0"
+  modelFormat:
+    name: safetensors
+    version: "1.0.0"
+  modelArchitecture: Cohere2ForCausalLM
+---
+apiVersion: ome.io/v1beta1
+kind: InferenceService
+metadata:
+  name: cmd-a-srt
+  namespace: ome-cmd-a
+spec:
+  model:
+    name: cmd-a
+  engine:
+    minReplicas: 1
+    maxReplicas: 1
+  runtime:
+    name: srt-llama-3-3-70b-instruct
+---
+apiVersion: ome.io/v1beta1
+kind: InferenceService
+metadata:
+  name: cmd-a-vllm
+  namespace: ome-cmd-a
+spec:
+  model:
+    name: cmd-a
+  engine:
+    minReplicas: 1
+    maxReplicas: 1
+  runtime:
+    name: vllm-llama-3-3-70b-instruct
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: cmd-a
+  namespace: ome-cmd-a
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: traefik-gateway
+      namespace: traefik
+  hostnames:
+    - ome.acebutt.xyz
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+          headers:
+          - name: Model
+            value: cmd-a-srt
+      backendRefs:
+        - name: cmd-a-srt-engine
+          port: 8080
+          weight: 1
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+          headers:
+          - name: Model
+            value: cmd-a-vllm
+      backendRefs:
+        - name: cmd-a-vllm-engine
+          port: 8080
+          weight: 1

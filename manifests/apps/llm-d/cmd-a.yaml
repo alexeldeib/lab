@@ -1,0 +1,115 @@
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cmd-a-endpoint-picker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: llm-d-modelservice-epp-metrics-scrape
+subjects:
+- kind: ServiceAccount
+  name: cmd-a-epp-sa
+  namespace: llm-d
+
+---
+
+apiVersion: llm-d.ai/v1alpha1
+kind: ModelService
+metadata:
+  name: cmd-a
+  namespace: llm-d
+spec:
+  decoupleScaling: false
+
+  baseConfigMapRef:
+    name: lws-baseconfig-simple
+
+  routing: 
+    modelName: CohereLabs/c4ai-command-a-03-2025
+    ports:
+    - name: app_port
+      port: 8000
+    - name: internal_port
+      port: 8200
+
+  modelArtifacts:
+    uri: pvc://model-storage/CohereLabs/c4ai-command-a-03-2025
+    # uri: hf://moonshotai/Kimi-K2-Instruct
+    # authSecretName: llm-d-hf-token
+
+  # describe decode pods
+  decode:
+    containers:
+    - name: vllm-worker
+      mountModelVolume: true
+    replicas: 1
+    parallelism:  
+      tensor: 2
+      # tensor: 2
+      data: 1
+      # data: 4
+    acceleratorTypes:
+      labelKey: gpu.nvidia.com/model
+      labelValues:
+        - H200
+
+  # describe the prefill pods 
+  prefill:
+    containers:
+    - name: vllm-worker
+      mountModelVolume: true
+    replicas: 1
+    parallelism:  
+      tensor: 2
+      # tensor: 2
+      data: 1
+      # data: 4
+    acceleratorTypes:
+      labelKey: gpu.nvidia.com/model
+      labelValues:
+        - H200
+---
+
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: cmd-a-insecure-tls
+  namespace: llm-d
+spec:
+  host: cmd-a-epp-service
+  trafficPolicy:
+    tls:
+      insecureSkipVerify: true
+      mode: SIMPLE
+
+---
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: cmd-a
+  namespace: llm-d
+spec:
+  parentRefs:
+  - name: llm-d-inference-gateway
+  rules:
+  - backendRefs:
+    - group: inference.networking.x-k8s.io
+      kind: InferencePool
+      name: cmd-a-inference-pool
+      port: 8000
+    matches:
+    - path:
+        type: PathPrefix
+        value: /cmd-a
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          type: ReplacePrefixMatch
+          replacePrefixMatch: /  
+    timeouts:
+      backendRequest: 0s
+      request: 0s

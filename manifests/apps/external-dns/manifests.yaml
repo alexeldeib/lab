@@ -69,7 +69,7 @@ spec:
             - --domain-filter=acebutt.xyz # (optional) limit to only example.com domains; change to match the zone created above.
             - --provider=cloudflare
             - --log-level=debug
-            - --cloudflare-proxied # (optional) enable the proxy feature of Cloudflare (DDOS protection, CDN...)
+            - --cloudflare-proxied=false # (optional) enable the proxy feature of Cloudflare (DDOS protection, CDN...)
             - --cloudflare-dns-records-per-page=5000 # (optional) configure how many DNS records to fetch per request
             - --cloudflare-record-comment="provisioned by external-dns" # (optional) configure comments for provisioned records; <=100 chars for free zones; <=500 chars for paid zones
           env:

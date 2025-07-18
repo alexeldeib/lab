@@ -1,0 +1,193 @@
+# ---
+
+# apiVersion: llm-d.ai/v1alpha1
+# kind: ModelService
+# metadata:
+#   name: kimi-k2
+#   namespace: llm-d
+# spec:
+#   baseConfigMapRef:
+#     name: basic-gpu-with-nixl-and-redis-lookup-preset
+#   decode:
+#     containers:
+#     - args:
+#       - --served-model-name
+#       - moonshotai/Kimi-K2-Instruct
+#       - --trust-remote-code
+#       env:
+#       - name: HF_TOKEN
+#         valueFrom:
+#           secretKeyRef:
+#             key: HF_TOKEN
+#             name: llm-d-hf-token
+#       name: vllm
+#       resources:
+#         limits:
+#           nvidia.com/gpu: "1"
+#         requests:
+#           nvidia.com/gpu: "1"
+#     replicas: 1
+#   decoupleScaling: false
+#   endpointPicker:
+#     containers:
+#     - env: null
+#       name: epp
+#   modelArtifacts:
+#     uri: hf://moonshotai/Kimi-K2-Instruct
+#   prefill:
+#     containers:
+#     - args:
+#       - --served-model-name
+#       - moonshotai/Kimi-K2-Instruct
+#       - --trust-remote-code
+#       env:
+#       - name: HF_TOKEN
+#         valueFrom:
+#           secretKeyRef:
+#             key: HF_TOKEN
+#             name: llm-d-hf-token
+#       name: vllm
+#       resources:
+#         limits:
+#           nvidia.com/gpu: "1"
+#         requests:
+#           nvidia.com/gpu: "1"
+#     replicas: 1
+#   routing:
+#     modelName: moonshotai/Kimi-K2-Instruct
+
+# ---
+
+# apiVersion: gateway.networking.k8s.io/v1
+# kind: HTTPRoute
+# metadata:
+#   name: kimi-k2
+#   namespace: llm-d
+# spec:
+#   parentRefs:
+#   - name: llm-d-inference-gateway
+#   rules:
+#   - backendRefs:
+#     - group: inference.networking.x-k8s.io
+#       kind: InferencePool
+#       name: kimi-k2-inference-pool
+#       port: 8000
+#     matches:
+#     - path:
+#         type: PathPrefix
+#         value: /
+#     timeouts:
+#       backendRequest: 0s
+#       request: 0s
+
+# ---
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kimi-k2-endpoint-picker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: llm-d-modelservice-epp-metrics-scrape
+subjects:
+- kind: ServiceAccount
+  name: kimi-k2-epp-sa
+  namespace: llm-d
+
+---
+
+apiVersion: llm-d.ai/v1alpha1
+kind: ModelService
+metadata:
+  name: kimi-k2
+  namespace: llm-d
+spec:
+  decoupleScaling: false
+
+  baseConfigMapRef:
+    name: lws-baseconfig-simple
+
+  routing: 
+    modelName: moonshotai/Kimi-K2-Instruct
+    ports:
+    - name: app_port
+      port: 8000
+    - name: internal_port
+      port: 8200
+
+  modelArtifacts:
+    uri: pvc://weights-vast-pvc/moonshotai/Kimi-K2-Instruct
+    # uri: hf://moonshotai/Kimi-K2-Instruct
+    # authSecretName: llm-d-hf-token
+
+  # describe decode pods
+  decode:
+    replicas: 2
+    parallelism:  
+      tensor: 8
+      # tensor: 2
+      data: 1
+      # data: 4
+    acceleratorTypes:
+      labelKey: gpu.nvidia.com/model
+      labelValues:
+        - H200
+
+  # describe the prefill pods 
+  prefill:
+    replicas: 4
+    parallelism:  
+      tensor: 8
+      # tensor: 2
+      data: 1
+      # data: 4
+    acceleratorTypes:
+      labelKey: gpu.nvidia.com/model
+      labelValues:
+        - H200
+---
+
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: kimi-k2-insecure-tls
+  namespace: llm-d
+spec:
+  host: kimi-k2-epp-service
+  trafficPolicy:
+    tls:
+      insecureSkipVerify: true
+      mode: SIMPLE
+
+---
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: kimi-k2
+  namespace: llm-d
+spec:
+  parentRefs:
+  - name: llm-d-inference-gateway
+  rules:
+  - backendRefs:
+    - group: inference.networking.x-k8s.io
+      kind: InferencePool
+      name: kimi-k2-inference-pool
+      port: 8000
+    matches:
+    - path:
+        type: PathPrefix
+        value: /kimi-k2
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          type: ReplacePrefixMatch
+          replacePrefixMatch: /  
+    timeouts:
+      backendRequest: 0s
+      request: 0s

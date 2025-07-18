@@ -1,0 +1,32 @@
+root = "/var/lib/buildkit"
+insecure-entitlements = [ "network.host", "security.insecure" ]
+
+[grpc]
+address = ["tcp://0.0.0.0:1234"]
+[grpc.tls]
+cert = "/certs/tls.crt"
+key = "/certs/tls.key"
+ca = "/certs/ca.crt"
+
+[worker]
+
+[worker.containerd]
+enabled = false
+
+[worker.oci]
+enabled = true
+gc = true
+gckeepstorage = 1500000000000
+snapshotter = "overlayfs"
+
+[[worker.oci.gcpolicy]]
+filters = ["type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+keepBytes = 102400000000
+keepDuration = 604800
+
+[[worker.oci.gcpolicy]]
+keepBytes = 1500000000000
+
+[[worker.oci.gcpolicy]]
+all = true
+keepBytes = 1500000000000

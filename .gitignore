@@ -1,5 +1,12 @@
-**/charts/*.tgz
 
 # helm inflations
+**/charts/*.tgz
 manifests/apps/**/charts
+gen.yaml
+
+# secrets
 manifests/apps/secrets/manifest.yaml
+manifests/apps/zot/values.yaml
+.env
+
+depot.json

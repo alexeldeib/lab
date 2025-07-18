@@ -24,14 +24,14 @@ helmCharts:
   namespace: traefik
   valuesFile: values.yaml
 
-# patches:
-# - patch: |
-#     - op: add
-#       path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
-#       value: argocd.acebutt.xyz
-#   target:
-#     kind: Service
-#     name: traefik
+patches:
+- patch: |
+    - op: add
+      path: /metadata/annotations/external-dns.alpha.kubernetes.io~1hostname
+      value: 'argocd.acebutt.xyz,infer.acebutt.xyz,zot.acebutt.xyz'
+  target:
+    kind: Service
+    name: traefik
 # - patch: |
 #     - op: remove
 #       path: /spec/listeners/0

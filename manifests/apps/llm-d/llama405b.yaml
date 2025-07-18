@@ -1,0 +1,109 @@
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: llama405b-endpoint-picker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: llm-d-modelservice-epp-metrics-scrape
+subjects:
+- kind: ServiceAccount
+  name: llama405b-epp-sa
+  namespace: llm-d
+
+---
+
+apiVersion: llm-d.ai/v1alpha1
+kind: ModelService
+metadata:
+  name: llama405b
+  namespace: llm-d
+spec:
+  decoupleScaling: false
+
+  baseConfigMapRef:
+    name: lws-baseconfig-simple
+
+  routing: 
+    modelName: meta-llama/Llama-3.1-70B
+    ports:
+    - name: app_port
+      port: 8080
+    - name: internal_port
+      port: 8200
+
+  modelArtifacts:
+    uri: pvc://weights-vast-pvc/meta-llama/Llama-3.1-70B
+    # authSecretName: llm-d-hf-token
+
+  # describe decode pods
+  decode:
+    replicas: 1
+    parallelism:  
+      tensor: 8
+      # tensor: 2
+      data: 1
+      # data: 4
+    acceleratorTypes:
+      labelKey: gpu.nvidia.com/model
+      labelValues:
+        - H200
+
+  # describe the prefill pods 
+  prefill:
+    replicas: 1
+    parallelism:  
+      tensor: 8
+      # tensor: 2
+      data: 1
+      # data: 4
+    acceleratorTypes:
+      labelKey: gpu.nvidia.com/model
+      labelValues:
+        - H200
+---
+
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: llama405b-insecure-tls
+  namespace: llm-d
+spec:
+  host: llama405b-epp-service
+  trafficPolicy:
+    tls:
+      insecureSkipVerify: true
+      mode: SIMPLE
+
+---
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: llama405b
+  namespace: llm-d
+spec:
+  parentRefs:
+  - name: llm-d-inference-gateway
+  rules:
+  - backendRefs:
+    - group: inference.networking.x-k8s.io
+      kind: InferencePool
+      name: llama405b-inference-pool
+      port: 8000
+    matches:
+    - path:
+        type: PathPrefix
+        value: /llama405b
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          type: ReplacePrefixMatch
+          replacePrefixMatch: /  
+    timeouts:
+      backendRequest: 0s
+      request: 0s

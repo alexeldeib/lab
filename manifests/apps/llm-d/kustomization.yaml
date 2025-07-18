@@ -6,6 +6,31 @@ namespace: llm-d
 resources:
 - https://raw.githubusercontent.com/llm-d/llm-d-deployer/6993eee2a499ff5571b8ad17d3a91a814b6ab83a/charts/llm-d/crds/modelservice-crd.yaml
 
+patches:
+- patch: |
+    - op: replace
+      path: /spec/template/spec/containers/0/image
+      value: docker.io/alexeldeib/llm-d-model-service:0.0.1-lws-dev@sha256:d03a03ef5c88b3fffd33f0debdd68efdd7c15b2481e0bffdc869764ca7941991
+    - op: replace
+      path: /spec/template/spec/containers/0/args
+      value:
+        - run
+        - --leader-elect=false
+        - --health-probe-bind-address=:8081
+        - --epp-cluster-role
+        - llm-d-modelservice-endpoint-picker
+        - --epp-pull-secrets
+        - ""
+        - --pd-pull-secrets
+        - ""
+  target:
+    kind: Deployment
+    name: llm-d-modelservice
+- path: llm-d.ai_modelservices.yaml
+  target:
+    kind: CustomResourceDefinition
+    name: modelservices.llm-d.ai
+
 helmCharts:
   - name: llm-d
     repo: https://llm-d.ai/llm-d-deployer
@@ -17,6 +42,7 @@ helmCharts:
     - all-features.yaml
     # valuesInline:
     #   gateway:
+    #     enabled: false
     #     gatewayClassName: istio
     #   sampleApplication:
     #     baseConfigMapRefName: basic-gpu-with-nixl-and-redis-lookup-preset

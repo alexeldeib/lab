@@ -1,0 +1,109 @@
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: deepseek-endpoint-picker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: llm-d-modelservice-epp-metrics-scrape
+subjects:
+- kind: ServiceAccount
+  name: deepseek-epp-sa
+  namespace: llm-d
+
+---
+
+apiVersion: llm-d.ai/v1alpha1
+kind: ModelService
+metadata:
+  name: deepseek
+  namespace: llm-d
+spec:
+  decoupleScaling: false
+
+  baseConfigMapRef:
+    name: lws-baseconfig
+
+  routing: 
+    modelName: deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct
+    ports:
+    - name: app_port
+      port: 8080
+    - name: internal_port
+      port: 8200
+
+  modelArtifacts:
+    uri: hf://deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct
+    # authSecretName: llm-d-hf-token
+
+  # describe decode pods
+  decode:
+    replicas: 1
+    parallelism:  
+      tensor: 16
+      # tensor: 2
+      data: 1
+      # data: 4
+    acceleratorTypes:
+      labelKey: gpu.nvidia.com/model
+      labelValues:
+        - H200
+
+  # describe the prefill pods 
+  prefill:
+    replicas: 1
+    parallelism:  
+      tensor: 16
+      # tensor: 2
+      data: 1
+      # data: 4
+    acceleratorTypes:
+      labelKey: gpu.nvidia.com/model
+      labelValues:
+        - H200
+---
+
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: deepseek-insecure-tls
+  namespace: llm-d
+spec:
+  host: deepseek-epp-service
+  trafficPolicy:
+    tls:
+      insecureSkipVerify: true
+      mode: SIMPLE
+
+---
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: deepseek
+  namespace: llm-d
+spec:
+  parentRefs:
+  - name: llm-d-inference-gateway
+  rules:
+  - backendRefs:
+    - group: inference.networking.x-k8s.io
+      kind: InferencePool
+      name: deepseek-inference-pool
+      port: 8000
+    matches:
+    - path:
+        type: PathPrefix
+        value: /deepseek
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          type: ReplacePrefixMatch
+          replacePrefixMatch: /  
+    timeouts:
+      backendRequest: 0s
+      request: 0s

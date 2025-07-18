@@ -1,0 +1,64 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ome-system
+
+resources:
+- ./ome-crds.yaml
+- ./ome-resources.yaml
+- config.yaml
+
+# helmCharts:
+#   - name: ome-crd
+#     repo: oci://ghcr.io/moirai-internal/charts
+#     version: 0.1.3
+#     releaseName: ome-crd
+#     namespace: ome-system
+#   - name: ome-resources
+#     repo: oci://ghcr.io/moirai-internal/charts
+#     version: 0.1.3
+#     releaseName: ome-resources
+#     namespace: ome-system
+
+patches:
+- patch: |
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: '--leader-election-namespace=ome-system'
+  target:
+    kind: Deployment
+    name: ome-controller-manager
+    namespace: ome-system
+- patch: |
+    - op: replace
+      path: /spec/template/spec/containers/0/args/1
+      value: '/mnt/local/models'
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: '--namespace=ome-system'
+    - op: replace
+      path: /spec/template/spec/containers/0/volumeMounts/0/mountPath
+      value: /mnt/local/models
+    - op: replace
+      path: /spec/template/spec/volumes/0/hostPath/path
+      value: /mnt/local/models
+  target:
+    kind: DaemonSet
+    name: ome-model-agent-daemonset
+    namespace: ome-system
+- target:
+    group: admissionregistration.k8s.io
+    kind: ValidatingWebhookConfiguration
+  patch: |
+    - op: replace
+      path: /metadata/annotations
+      value:
+        cert-manager.io/inject-ca-from: ome-system/serving-cert
+- target:
+    group: admissionregistration.k8s.io
+    kind: MutatingWebhookConfiguration
+  patch: |
+    - op: replace
+      path: /metadata/annotations
+      value:
+        cert-manager.io/inject-ca-from: ome-system/serving-cert

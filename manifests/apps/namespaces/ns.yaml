@@ -2,12 +2,22 @@
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: aibrix
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: argo
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: argocd
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: buildkit
 ---
 apiVersion: v1
 kind: Namespace
@@ -27,6 +37,11 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: keda
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: llm-d
 ---
 apiVersion: v1
@@ -37,5 +52,40 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
+  name: lws-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: metrics-server
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ome
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ome-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: s3-mount-csi
+---
+apiVersion: v1
+kind: Namespace
+metadata:
   name: traefik
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: yandex-csi-s3
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zot
 ---

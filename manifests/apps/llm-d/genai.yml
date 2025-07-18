@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bench
+  namespace: llm-d
+spec:
+  volumes:
+    - name: persistent-storage
+      persistentVolumeClaim:
+        claimName: model-storage
+  containers:
+    - command:
+      - bash
+      - -c
+      - 'sleep infinity'
+      # image: ghcr.io/moirai-internal/genai-bench:v0.0.1
+      image: docker.io/alexeldeib/genai-bench:v0.0.1-21-g1841fb8-dirty
+      imagePullPolicy: IfNotPresent
+      name: bench
+      volumeMounts:
+        - mountPath: /model-cache
+          name: persistent-storage

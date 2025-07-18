@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: yandex-csi-s3
+
+helmCharts:
+  - name: csi-s3
+    repo: https://yandex-cloud.github.io/k8s-csi-s3/charts
+    version: v0.43.0
+    releaseName: csi-s3
+    namespace: yandex-csi-s3
+    valuesInline:
+      secret:
+        create: false
+      storageClass:
+        singleBucket: weights
